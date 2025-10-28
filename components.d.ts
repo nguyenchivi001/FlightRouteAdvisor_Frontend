@@ -11,9 +11,18 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AlternativeRoutes: typeof import('./src/components/AlternativeRoutes.vue')['default']
     AppFooter: typeof import('./src/components/AppFooter.vue')['default']
+    FlightSearch: typeof import('./src/components/RouteSearchForm.vue')['default']
+    GraphStats: typeof import('./src/components/GraphStats.vue')['default']
     HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
+    HubAnalysis: typeof import('./src/components/HubAnalysis.vue')['default']
+    MapView: typeof import('./src/components/MapView.vue')['default']
+    RouteMap: typeof import('./src/components/RouteMap.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    RoutesList: typeof import('./src/components/RoutesList.vue')['default']
+    RouteVisualization: typeof import('./src/components/RouteVisualization.vue')['default']
+    SearchForm: typeof import('./src/components/RouteSearchForm.vue')['default']
   }
 }
