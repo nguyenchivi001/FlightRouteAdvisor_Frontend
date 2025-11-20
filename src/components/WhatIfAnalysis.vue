@@ -11,7 +11,6 @@
         (weather, strikes, technical issues, etc.)
       </v-alert>
 
-      <!-- Current Route Path -->
       <div class="mb-4">
         <div class="text-subtitle-2 mb-2">
           <v-icon size="small">mdi-airplane</v-icon>
@@ -28,7 +27,6 @@
         </v-chip>
       </div>
 
-      <!-- Transfer Hubs Selection -->
       <div v-if="transferHubs.length > 0" class="mb-4">
         <div class="text-subtitle-2 mb-2">
           <v-icon size="small">mdi-map-marker</v-icon>
@@ -60,7 +58,6 @@
         </v-alert>
       </div>
 
-      <!-- Analyze Button -->
       <v-btn
         v-if="transferHubs.length > 0"
         color="warning"
@@ -74,7 +71,6 @@
         Simulate: What if {{ selectedHubs.join(', ') }} unavailable?
       </v-btn>
 
-      <!-- Results -->
       <div v-if="whatIfResults">
         <v-divider class="my-4"></v-divider>
 
@@ -83,7 +79,6 @@
           Simulation Results
         </div>
 
-        <!-- No Alternative Found -->
         <v-alert v-if="!whatIfResults.path_exists" type="error" prominent class="mb-4">
           <v-row align="center">
             <v-col class="grow">
@@ -98,10 +93,8 @@
           </v-row>
         </v-alert>
 
-        <!-- Alternative Found -->
         <div v-else>
           <v-row>
-            <!-- Original Route -->
             <v-col cols="12" md="6">
               <v-card variant="outlined" class="h-100">
                 <v-card-title class="text-subtitle-1 bg-success">
@@ -155,7 +148,6 @@
               </v-card>
             </v-col>
 
-            <!-- Alternative Route -->
             <v-col cols="12" md="6">
               <v-card variant="outlined" class="h-100" color="warning-lighten-5">
                 <v-card-title class="text-subtitle-1 bg-warning">
@@ -163,6 +155,16 @@
                   Alternative Route ({{ selectedHubs.join(', ') }} Unavailable)
                 </v-card-title>
                 <v-card-text>
+                  <v-alert
+                    v-if="hasInternationalTransfer(whatIfResults.alternative_path)"
+                    type="error"
+                    variant="tonal"
+                    density="compact"
+                    icon="mdi-passport"
+                    class="mb-3"
+                  >
+                    This alternative route includes an **International Transfer**.
+                  </v-alert>
                   <div class="mb-3">
                     <strong>New Path:</strong>
                     <div class="mt-1">
@@ -240,7 +242,6 @@
             </v-col>
           </v-row>
 
-          <!-- Impact Summary -->
           <v-alert
             :type="getImpactSeverity()"
             variant="tonal"
@@ -252,7 +253,6 @@
             <div>{{ getImpactMessage() }}</div>
           </v-alert>
 
-          <!-- Recommendations -->
           <v-card variant="outlined" class="mt-4" color="info-lighten-5">
             <v-card-title class="text-subtitle-1 bg-info">
               <v-icon start size="small">mdi-lightbulb</v-icon>
@@ -292,7 +292,15 @@
                     Alternative route via <strong>{{ getAlternativeHubsText() }}</strong>
                   </v-list-item-title>
                 </v-list-item>
-              </v-list>
+                <v-list-item v-if="hasInternationalTransfer(whatIfResults.alternative_path)">
+                  <template v-slot:prepend>
+                    <v-icon color="error">mdi-passport</v-icon>
+                  </template>
+                  <v-list-item-title class="font-weight-bold text-error">
+                    **CRITICAL:** The alternative route requires International Transfer - Verify Visa/Entry requirements!
+                  </v-list-item-title>
+                </v-list-item>
+                </v-list>
             </v-card-text>
           </v-card>
         </div>
@@ -323,6 +331,14 @@ const props = defineProps({
 const analyzing = ref(false)
 const selectedHubs = ref([])
 const whatIfResults = ref(null)
+
+const hasInternationalTransfer = (routeData) => {
+  if (!routeData.path_details) return false
+  
+  return routeData.path_details.some(airport => 
+    airport.transfer && airport.transfer.is_international
+  )
+}
 
 // Extract transfer hubs (exclude origin and destination)
 const transferHubs = computed(() => {
@@ -384,7 +400,7 @@ const getImpactTitle = () => {
   const severity = getImpactSeverity()
   if (severity === 'error') return 'High Impact: Significant Disruption'
   if (severity === 'warning') return 'Moderate Impact: Plan Accordingly'
-  return '🟢 Low Impact: Minimal Disruption'
+  return 'Low Impact: Minimal Disruption'
 }
 
 const getImpactMessage = () => {

@@ -9,15 +9,22 @@
       <v-tabs v-model="selectedRouteIndex" color="primary">
         <v-tab v-for="(route, index) in routes" :key="index" :value="index">
           Route {{ index + 1 }}
-          <v-chip size="x-small" class="ml-2" color="primary">
+          <v-chip size="x-small" class="ml-2" :color="getTransferChipColor(route)">
             {{ route.stops }} stops
+            <v-icon v-if="hasInternationalTransfer(route)" size="small" end>
+              mdi-passport
+            </v-icon>
           </v-chip>
         </v-tab>
       </v-tabs>
 
       <v-window v-model="selectedRouteIndex">
         <v-window-item v-for="(route, index) in routes" :key="index" :value="index">
-          <RouteSummaryCards :route="route" class="mt-4" />
+          <RouteSummaryCards 
+            :route="route" 
+            :has-international-transfer="hasInternationalTransfer(route)"
+            class="mt-4" 
+          />
 
           <v-card variant="outlined" class="mt-4">
             <v-card-title>
@@ -31,7 +38,6 @@
 
           <RouteTimeline :route="route" />
 
-          <!-- 🌟 WHAT-IF ANALYSIS - Ngay sau timeline -->
           <WhatIfAnalysis 
             :route="route" 
             :source="getFirstAirport(route)"
@@ -63,6 +69,18 @@ const selectedRouteIndex = ref(0)
 watch(() => props.routes, () => {
   selectedRouteIndex.value = 0
 }, { deep: true })
+
+const hasInternationalTransfer = (route) => {
+  if (!route.path_details) return false
+  
+  return route.path_details.some(airport => 
+    airport.transfer && airport.transfer.is_international
+  )
+}
+
+const getTransferChipColor = (route) => {
+    return hasInternationalTransfer(route) ? 'error' : 'primary';
+}
 
 const getFirstAirport = (route) => {
   return route.path_details?.[0]?.iata || null

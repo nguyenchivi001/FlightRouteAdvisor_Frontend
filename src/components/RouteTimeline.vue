@@ -55,10 +55,24 @@
             </v-card-text>
             
             <v-card-text v-if="idx > 0 && idx < route.path_details.length - 1" class="pt-0">
-              <v-alert density="compact" type="info" variant="tonal">
-                <v-icon start size="small">mdi-information</v-icon>
-                Transfer time: ~90 minutes
-              </v-alert>
+                <div v-if="airport.transfer">
+                  <v-alert 
+                    density="compact" 
+                    :type="airport.transfer.is_international ? 'error' : 'info'" 
+                    variant="tonal"
+                    icon="mdi-passport"
+                  >
+                    <span class="font-weight-bold">Transfer Time: {{ airport.transfer.time.toFixed(1) }} hours</span>
+                    <div class="text-caption">
+                      {{ airport.transfer.is_international ? 'International Transfer (Visa/Passport Check Required)' : 'Domestic Transfer' }}
+                    </div>
+                  </v-alert>
+                </div>
+                <v-alert v-else density="compact" type="info" variant="tonal">
+                  <v-icon start size="small">mdi-information</v-icon>
+                  Transfer time: N/A (Data missing)
+                </v-alert>
+
             </v-card-text>
           </v-card>
         </v-timeline-item>
