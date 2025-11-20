@@ -246,19 +246,59 @@ const createPopupContent = (airport, route, index) => {
       </p>
   `
   
+  const isTransferPoint = index > 0 && index < route.path_details.length - 1;
+  
   if (index === 0) {
     content += `<p style="margin: 8px 0 4px 0; color: #4CAF50; font-weight: bold;">✈ Origin</p>`
   } else if (index === route.path_details.length - 1) {
     content += `<p style="margin: 8px 0 4px 0; color: #F44336; font-weight: bold;">⚑ Destination</p>`
-  } else {
+  } else if (isTransferPoint) {
     content += `<p style="margin: 8px 0 4px 0; color: #FF9800; font-weight: bold;">● Transfer Point</p>`
+  
+    if (airport.transfer) {
+        const transferTime = airport.transfer.time.toFixed(1);
+        const isInternational = airport.transfer.is_international;
+        
+        content += `
+            <hr style="margin: 8px 0; border: none; border-top: 1px solid #ddd;">
+            <p style="margin: 4px 0; font-weight: bold;">Transfer Details:</p>
+            <table style="width: 100%; font-size: 13px;">
+                <tr>
+                    <td>Wait Time:</td>
+                    <td style="text-align: right;"><strong>${transferTime} hours</strong></td>
+                </tr>
+        `;
+        
+        if (isInternational) {
+             content += `
+                <tr>
+                    <td>Type:</td>
+                    <td style="text-align: right; color: #C62828;">
+                        <strong title="Requires Passport/Visa check">
+                            <span style="font-size: 12px;"></span> International
+                        </strong>
+                    </td>
+                </tr>
+            `;
+        } else {
+             content += `
+                <tr>
+                    <td>Type:</td>
+                    <td style="text-align: right; color: #1B5E20;">
+                        <strong title="Domestic transfer">Domestic</strong>
+                    </td>
+                </tr>
+            `;
+        }
+        content += `</table>`;
+    }
   }
   
   if (index < route.segments.length) {
     const segment = route.segments[index]
     content += `
       <hr style="margin: 8px 0; border: none; border-top: 1px solid #ddd;">
-      <p style="margin: 4px 0; font-weight: bold;">Next Flight:</p>
+      <p style="margin: 4px 0; font-weight: bold;">Next Flight Segment:</p>
       <table style="width: 100%; font-size: 13px;">
         <tr>
           <td>Distance:</td>
