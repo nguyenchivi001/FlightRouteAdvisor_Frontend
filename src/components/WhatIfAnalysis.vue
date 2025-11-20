@@ -382,8 +382,8 @@ const getImpactSeverity = () => {
 
 const getImpactTitle = () => {
   const severity = getImpactSeverity()
-  if (severity === 'error') return '🔴 High Impact: Significant Disruption'
-  if (severity === 'warning') return '🟠 Moderate Impact: Plan Accordingly'
+  if (severity === 'error') return 'High Impact: Significant Disruption'
+  if (severity === 'warning') return 'Moderate Impact: Plan Accordingly'
   return '🟢 Low Impact: Minimal Disruption'
 }
 

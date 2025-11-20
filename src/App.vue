@@ -124,7 +124,7 @@
     <v-footer app>
       <v-spacer></v-spacer>
       <span class="text-caption">
-        &copy; 2025 Flight Route Advisor - Data from OpenFlights.org
+        &copy; 2025 Flight Route Advisor
       </span>
       <v-spacer></v-spacer>
     </v-footer>
