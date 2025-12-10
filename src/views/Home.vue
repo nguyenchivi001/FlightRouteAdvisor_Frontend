@@ -55,11 +55,63 @@ const handleError = (message) => {
   showSnackbar(message, 'error')
 }
 
-const handleSearch = async ({ source, destination, costType, maxStops, kPaths }) => {
+const filterAndSortRoutes = (rawRoutes, criteria) => {
+  if (!rawRoutes || rawRoutes.length === 0) return []
+  const {
+    maxTotalTime,
+    maxTotalCost,
+    stopsFilter,
+    hideInternational,
+    sortBy,
+  } = criteria
+
+  const filtered = rawRoutes.filter((r) => {
+    if (maxTotalTime != null && maxTotalTime !== '' && (r.total_time ?? Infinity) > maxTotalTime) return false
+    if (maxTotalCost != null && maxTotalCost !== '' && (r.total_cost ?? Infinity) > maxTotalCost) return false
+    if (stopsFilter === 'direct' && (r.stops ?? 0) !== 0) return false
+    if (stopsFilter === 'max1' && (r.stops ?? 0) > 1) return false
+    if (hideInternational) {
+      const hasIntl = r.path_details?.some(a => a.transfer?.is_international)
+      if (hasIntl) return false
+    }
+    return true
+  })
+
+  const sortKeyMap = {
+    time: 'total_time',
+    cost: 'total_cost',
+    distance: 'total_distance',
+    stops: 'stops',
+  }
+  const key = sortKeyMap[sortBy] || 'total_time'
+
+  filtered.sort((a, b) => {
+    const av = a?.[key] ?? Infinity
+    const bv = b?.[key] ?? Infinity
+    return av - bv
+  })
+
+  return filtered
+}
+
+const handleSearch = async ({
+  source,
+  destination,
+  kPaths,
+  maxTotalTime,
+  maxTotalCost,
+  stopsFilter,
+  hideInternational,
+  sortBy,
+}) => {
   if (!source || !destination) {
     handleError('Please select both origin and destination.')
     return
   }
+
+  // Map UI filters to API params
+  const costType = ['time', 'cost', 'distance'].includes(sortBy) ? sortBy : 'time'
+  const maxStops = stopsFilter === 'direct' ? 0 : (stopsFilter === 'max1' ? 1 : null)
 
   searching.value = true
   routes.value = [] 
@@ -72,12 +124,21 @@ const handleSearch = async ({ source, destination, costType, maxStops, kPaths })
       maxStops
     )
     
-    routes.value = response.data.routes || []
+    const rawRoutes = response.data.routes || []
+    const filtered = filterAndSortRoutes(rawRoutes, {
+      maxTotalTime,
+      maxTotalCost,
+      stopsFilter,
+      hideInternational,
+      sortBy,
+    })
+
+    routes.value = filtered
     
-    if (routes.value.length === 0) {
-      showSnackbar('No routes found for your criteria.', 'warning')
+    if (filtered.length === 0) {
+      showSnackbar('No routes match your filters.', 'warning')
     } else {
-      showSnackbar(`Found ${routes.value.length} route(s)!`, 'success')
+      showSnackbar(`Found ${filtered.length} route(s)!`, 'success')
     }
 
   } catch (error) {
