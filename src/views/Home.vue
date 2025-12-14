@@ -11,6 +11,74 @@
       :routes="routes" 
     />
 
+    <v-card
+      v-if="lastSearchPayload"
+      variant="outlined"
+      class="mt-4"
+    >
+      <v-card-title class="d-flex align-center">
+        <v-icon class="mr-2">mdi-timer</v-icon>
+        Algorithm Comparison
+        <v-spacer />
+        <v-btn
+          color="primary"
+          :loading="comparing"
+          :disabled="comparing"
+          @click="runComparison"
+        >
+          <v-icon class="mr-2">mdi-flash</v-icon>
+          Compare now
+        </v-btn>
+      </v-card-title>
+      <v-card-text>
+        <div class="text-body-2 text-medium-emphasis mb-3">
+          Using last search: {{ lastSearchPayload?.source }} → {{ lastSearchPayload?.destination }} ({{ lastSearchPayload?.costType }}, max stops: {{ lastSearchPayload?.maxStops ?? 'No limit' }})
+        </div>
+
+        <v-alert
+          v-if="compareResult && compareResult.results?.length === 0"
+          type="warning"
+          variant="tonal"
+        >
+          No comparison data.
+        </v-alert>
+
+        <v-row v-if="compareResult && compareResult.results?.length" dense>
+          <v-col
+            v-for="item in compareResult.results"
+            :key="item.name"
+            cols="12"
+            md="6"
+          >
+            <v-card variant="outlined">
+              <v-card-title class="d-flex align-center">
+                <v-icon class="mr-2" :color="item.name === 'astar' ? 'deep-purple' : 'primary'">
+                  {{ item.name === 'astar' ? 'mdi-star-outline' : 'mdi-routes' }}
+                </v-icon>
+                {{ item.name.toUpperCase() }}
+                <v-spacer />
+                <v-chip :color="item.found ? 'success' : 'error'" size="small" variant="flat">
+                  {{ item.found ? 'Found' : 'No path' }}
+                </v-chip>
+              </v-card-title>
+              <v-card-text>
+                <div class="text-h6 font-weight-bold mb-2">{{ item.elapsed_ms }} ms</div>
+                <div class="text-caption text-medium-emphasis">
+                  {{ item.route ? 'Stops: ' + item.route.stops + ' | Total time: ' + item.route.total_time + 'h' : 'No route details' }}
+                </div>
+              </v-card-text>
+            </v-card>
+          </v-col>
+        </v-row>
+
+        <v-skeleton-loader
+          v-if="comparing && !compareResult"
+          type="card"
+          class="mt-2"
+        />
+      </v-card-text>
+    </v-card>
+
     <v-snackbar
       v-model="snackbar.show"
       :timeout="4000"
@@ -38,7 +106,10 @@ import RouteSearchForm from '../components/RouteSearchForm.vue'
 import RouteResults from '../components/RouteResults.vue' 
 
 const searching = ref(false)
+const comparing = ref(false)
 const routes = ref([])
+const compareResult = ref(null)
+const lastSearchPayload = ref(null)
 const snackbar = ref({
   show: false,
   message: '',
@@ -115,6 +186,7 @@ const handleSearch = async ({
 
   searching.value = true
   routes.value = [] 
+  compareResult.value = null
   try {
     const response = await api.findAlternativeRoutes(
       source,
@@ -134,6 +206,17 @@ const handleSearch = async ({
     })
 
     routes.value = filtered
+    lastSearchPayload.value = {
+      source,
+      destination,
+      costType,
+      maxStops,
+      maxTotalTime,
+      maxTotalCost,
+      stopsFilter,
+      hideInternational,
+      sortBy,
+    }
     
     if (filtered.length === 0) {
       showSnackbar('No routes match your filters.', 'warning')
@@ -146,6 +229,27 @@ const handleSearch = async ({
     handleError(error.response?.data?.detail || 'An unexpected error occurred while searching for routes.')
   } finally {
     searching.value = false
+  }
+}
+
+const runComparison = async () => {
+  if (!lastSearchPayload.value) {
+    showSnackbar('Please run a search first.', 'warning')
+    return
+  }
+  const { source, destination, costType, maxStops } = lastSearchPayload.value
+
+  comparing.value = true
+  compareResult.value = null
+  try {
+    const resp = await api.compareAlgorithms(source, destination, costType, maxStops)
+    compareResult.value = resp.data
+    showSnackbar('Comparison completed.', 'success')
+  } catch (error) {
+    console.error('Error comparing algorithms:', error)
+    showSnackbar(error.response?.data?.detail || 'Comparison failed.', 'error')
+  } finally {
+    comparing.value = false
   }
 }
 </script>
