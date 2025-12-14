@@ -78,4 +78,16 @@ export default {
   healthCheck() {
     return api.get('/health')
   },
+
+  compareAlgorithms(source, destination, costType = 'time', maxStops = null) {
+    const payload = {
+      source,
+      destination,
+      cost_type: costType,
+    }
+    if (maxStops !== null && maxStops !== undefined) {
+      payload.max_stops = maxStops
+    }
+    return api.post('/routes/compare-algorithms', payload)
+  },
 }

@@ -79,40 +79,82 @@
           </v-col>
         </v-row>
 
-        <v-row>
-          <v-col cols="12" md="4">
-            <v-select
-              v-model="costType"
-              :items="costTypes"
-              label="Optimize By"
-              prepend-icon="mdi-tune"
-              variant="outlined"
-              density="comfortable"
-            ></v-select>
-          </v-col>
+        <v-card variant="outlined" class="mt-4">
+          <v-card-title class="py-3 text-subtitle-1">
+            <v-icon class="mr-2">mdi-filter-variant</v-icon>
+            Filters & Sorting
+          </v-card-title>
+          <v-divider></v-divider>
+          <v-card-text>
+            <v-row>
+              <v-col cols="12" md="6" class="d-flex flex-column">
+                <div class="text-subtitle-1 font-weight-semibold mb-2">Sort by</div>
+                <v-btn-toggle v-model="sortBy" color="primary" density="comfortable" divided class="w-100">
+                  <v-btn value="time">Time</v-btn>
+                  <v-btn value="cost">Cost</v-btn>
+                  <v-btn value="distance">Distance</v-btn>
+                  <v-btn value="stops">Stops</v-btn>
+                </v-btn-toggle>
+              </v-col>
+              <v-col cols="12" md="6" class="d-flex flex-column">
+                <div class="text-subtitle-1 font-weight-semibold mb-2">Stops</div>
+                <v-btn-toggle v-model="stopsFilter" color="primary" density="comfortable" divided class="w-100">
+                  <v-btn value="any">Any</v-btn>
+                  <v-btn value="direct">Direct</v-btn>
+                  <v-btn value="max1">≤ 1 stop</v-btn>
+                </v-btn-toggle>
+              </v-col>
+            </v-row>
 
-          <v-col cols="12" md="4">
-            <v-select
-              v-model="maxStops"
-              :items="maxStopsOptions"
-              label="Maximum Stops"
-              prepend-icon="mdi-map-marker-multiple"
-              variant="outlined"
-              density="comfortable"
-            ></v-select>
-          </v-col>
+            <v-row class="mt-2">
+              <v-col cols="12" md="6">
+                <v-text-field
+                  v-model.number="maxTotalTime"
+                  label="Max Total Time (hours)"
+                  prepend-icon="mdi-clock-outline"
+                  variant="outlined"
+                  density="comfortable"
+                  type="number"
+                  min="0"
+                  placeholder="e.g. 20"
+                />
+              </v-col>
+              <v-col cols="12" md="6">
+                <v-text-field
+                  v-model.number="maxTotalCost"
+                  label="Max Estimated Cost"
+                  prepend-icon="mdi-currency-usd"
+                  variant="outlined"
+                  density="comfortable"
+                  type="number"
+                  min="0"
+                  placeholder="e.g. 800"
+                />
+              </v-col>
+            </v-row>
 
-          <v-col cols="12" md="4">
-            <v-select
-              v-model="kPaths"
-              :items="[1, 3, 5, 10]"
-              label="Number of Routes"
-              prepend-icon="mdi-routes"
-              variant="outlined"
-              density="comfortable"
-            ></v-select>
-          </v-col>
-        </v-row>
+            <v-row class="mt-2" align="center">
+              <v-col cols="12" md="6" class="d-flex flex-column">
+                <v-select
+                  v-model="kPaths"
+                  :items="[1, 3, 5, 10]"
+                  label="Number of Routes"
+                  prepend-icon="mdi-routes"
+                  variant="outlined"
+                  density="comfortable"
+                ></v-select>
+              </v-col>
+              <v-col cols="12" md="6" class="d-flex align-center mt-2 mt-md-6">
+                <v-switch
+                  v-model="hideInternational"
+                  label="Hide international transfers"
+                  color="error"
+                  density="compact"
+                />
+              </v-col>
+            </v-row>
+          </v-card-text>
+        </v-card>
 
         <v-btn
           color="primary"
@@ -146,9 +188,12 @@ const formRef = ref(null)
 const valid = ref(false)
 const source = ref(null)
 const destination = ref(null)
-const costType = ref('time')
-const maxStops = ref(null)
 const kPaths = ref(5)
+const maxTotalTime = ref(null)
+const maxTotalCost = ref(null)
+const stopsFilter = ref('any') // any | direct | max1
+const hideInternational = ref(false)
+const sortBy = ref('time') // time | cost | distance | stops
 
 const sourceAirports = ref([])
 const destinationAirports = ref([])
@@ -156,20 +201,6 @@ const loadingSource = ref(false)
 const loadingDestination = ref(false)
 const sourceSearch = ref('')
 const destinationSearch = ref('')
-
-const costTypes = [
-  { title: 'Flight Time', value: 'time' },
-  { title: 'Distance', value: 'distance' },
-  { title: 'Cost', value: 'cost' },
-]
-
-const maxStopsOptions = [
-  { title: 'No limit', value: null },
-  { title: 'Direct only', value: 0 },
-  { title: 'Max 1 stop', value: 1 },
-  { title: 'Max 2 stops', value: 2 },
-  { title: 'Max 3 stops', value: 3 },
-]
 
 const searchAirports = async (query, targetAirports, targetLoading) => {
     if (!query || query.length < 2) {
@@ -214,9 +245,12 @@ const performSearch = async () => {
   emit('search', {
     source: source.value,
     destination: destination.value,
-    costType: costType.value,
-    maxStops: maxStops.value,
     kPaths: kPaths.value,
+    maxTotalTime: maxTotalTime.value,
+    maxTotalCost: maxTotalCost.value,
+    stopsFilter: stopsFilter.value,
+    hideInternational: hideInternational.value,
+    sortBy: sortBy.value,
   })
 }
 </script>
