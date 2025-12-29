@@ -7,6 +7,10 @@
 - Võ Đức Vĩnh - 22521684  
 - Dương Văn Súa - 22521267  
 
+## Giảng viên hướng dẫn:
+- **Tên**: Thầy Trần Hưng Nghiệp
+- **Email**: nghiepth@uit.edu.vn
+
 ---
 
 ## Yêu cầu hệ thống
